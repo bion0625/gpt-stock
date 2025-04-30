@@ -6,16 +6,21 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 import requests, json, os
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 # 실행 코드
 # 기본
-#  .\.venv\Scripts\activate
-# 서버버
+# python -m venv .venv
+# .\.venv\Scripts\activate
+# pip install -r requirements.txt
+# 서버
 # uvicorn main:app --reload
 
-SECRET_KEY = "my-secret-key" # 보안상 .env 파일에 따로 저장 예정
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
 
 app = FastAPI()
 
@@ -98,7 +103,7 @@ user_portfolios = load_portfolio()
 def add_stock(item: StockItem, token: str = Depends(oauth2_scheme)):
     username = get_current_user(token)
     user_portfolios.setdefault(username, {})
-    if item.symbol in user_portfolios:
+    if item.symbol in user_portfolios[username]:
         user_portfolios[username][item.symbol] += item.amount
     else:
         user_portfolios[username][item.symbol] = item.amount
@@ -121,7 +126,6 @@ def delete_stock(symbol: str, token: str = Depends(oauth2_scheme)):
 def get_portfolio(token: str = Depends(oauth2_scheme)):
     result = []
     username = get_current_user(token)
-    print(f"username: {username}")
     if not user_portfolios or not user_portfolios[username]:
         return []
     for symbol, amount in user_portfolios[username].items():
