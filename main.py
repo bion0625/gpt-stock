@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import requests 
+import requests, json, os
 from bs4 import BeautifulSoup
 
 # 실행 코드
@@ -11,7 +11,21 @@ from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-portfolio = {}
+PORTFOLIO_FILE = "portfolio.json"
+
+# 서버 시작 시 포트폴리오 불러오기
+def load_portfolio():
+    if os.path.exists(PORTFOLIO_FILE):
+        with open(PORTFOLIO_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+# 포트폴리오 저장
+def save_portfolio():
+    with open(PORTFOLIO_FILE, "w", encoding="utf-8") as f:
+        json.dump(portfolio, f, indent=2, ensure_ascii=False)
+
+portfolio = load_portfolio()
 
 class StockItem(BaseModel):
     symbol: str
@@ -24,7 +38,18 @@ def add_stock(item: StockItem):
         portfolio[item.symbol] += item.amount
     else:
         portfolio[item.symbol] = item.amount
+    save_portfolio()
     return {"message": "추가 완료", "portfolio": portfolio}
+
+# 종목 삭제
+@app.delete("/portfolio/{symbol}")
+def delete_stock(symbol: str):
+    if symbol in portfolio:
+        del portfolio[symbol]
+        save_portfolio()
+        return {"message": f"{symbol} 삭제됨"}
+    else:
+        raise HTTPException(status_code=404, detail="종목이 포트폴리오에 없습니다.")
 
 # 포트폴리오 조회
 @app.get("/portfolio")
@@ -53,15 +78,6 @@ def get_price(symbol: str):
         except ValueError:
             return 0
     return 0
-
-# 종목 삭제
-@app.delete("/portfolio/{symbol}")
-def delete_stock(symbol: str):
-    if symbol in portfolio:
-        del portfolio[symbol]
-        return {"message": f"{symbol} 삭제됨"}
-    else:
-        raise HTTPException(status_code=404, detail="종목이 포트폴리오에 없습니다.")
 
 # 총 평가금액 조회
 @app.get("/portfolio/value")
