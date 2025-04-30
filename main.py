@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import requests 
 from bs4 import BeautifulSoup
@@ -26,15 +26,6 @@ def add_stock(item: StockItem):
         portfolio[item.symbol] = item.amount
     return {"message": "추가 완료", "portfolio": portfolio}
 
-# 실시간 주가 크롤링 함수
-def get_price(symbol: str):
-    url = f"https://finance.naver.com/item/main.nhn?code={symbol}"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, "html.parser")
-    tag = soup.select_one("p.no_today span.blind")
-    return tag.text if tag else "조회 불가"
-
 # 포트폴리오 조회
 @app.get("/portfolio")
 def get_portfolio():
@@ -47,6 +38,51 @@ def get_portfolio():
             "price": price
         })
     return result
+
+# 실시간 주가 크롤링 함수
+def get_price(symbol: str):
+    url = f"https://finance.naver.com/item/main.nhn?code={symbol}"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    res = requests.get(url, headers=headers)
+    soup = BeautifulSoup(res.text, "html.parser")
+    tag = soup.select_one("p.no_today span.blind")
+
+    if tag:
+        try:
+            return int(tag.text.replace(",",""))
+        except ValueError:
+            return 0
+    return 0
+
+# 종목 삭제
+@app.delete("/portfolio/{symbol}")
+def delete_stock(symbol: str):
+    if symbol in portfolio:
+        del portfolio[symbol]
+        return {"message": f"{symbol} 삭제됨"}
+    else:
+        raise HTTPException(status_code=404, detail="종목이 포트폴리오에 없습니다.")
+
+# 총 평가금액 조회
+@app.get("/portfolio/value")
+def get_total_value():
+    total = 0
+    details = []
+
+    for symbol, amount in portfolio.items():
+        price = get_price(symbol)
+        total += price * amount
+        details.append({
+            "symbol": symbol,
+            "price": price,
+            "amount": amount,
+            "value": price * amount
+        })
+    
+    return {
+        "total_value" : total,
+        "details" : details
+    }
 
 @app.get("/")
 def read_root():
