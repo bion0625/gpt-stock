@@ -6,3 +6,5 @@ python-multipart
 requests
 beautifulsoup4
 python-dotenv
+sqlalchemy>=2.0
+aiosqlite

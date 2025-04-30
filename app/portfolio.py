@@ -1,10 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel
+
 from app.auth import get_current_user
-from app.utils import get_price, load_portfolio, save_portfolio
+from app.models import Portfolio
+from app.utils import get_price
+from app.database import async_session_maker
 
 router = APIRouter()
-user_portfolios = load_portfolio()
+
+async def get_db():
+    async with async_session_maker() as session:
+        yield session
 
 class StockItem(BaseModel):
     symbol: str
@@ -12,56 +20,93 @@ class StockItem(BaseModel):
 
 # 종목 추가
 @router.post("/portfolio")
-def add_stock(item: StockItem, username: str = Depends(get_current_user)):
-    user_portfolios.setdefault(username, {})
-    if item.symbol in user_portfolios[username]:
-        user_portfolios[username][item.symbol] += item.amount
+async def add_stock(
+    item: StockItem, 
+    user = Depends(get_current_user), 
+    db: AsyncSession = Depends(get_db)
+    ):
+    
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id, Portfolio.symbol == item.symbol)
+    )
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        existing.amount += item.amount
     else:
-        user_portfolios[username][item.symbol] = item.amount
-    save_portfolio(user_portfolios)
-    return {"message": "추가 완료", "portfolio": user_portfolios[username]}
+        new = Portfolio(symbol=item.symbol, amount=item.amount, user_id=user.id)
+        db.add(new)
+    
+    await db.commit()
+    return {"message": "추가 완료"}
 
 # 종목 삭제
 @router.delete("/portfolio/{symbol}")
-def delete_stock(symbol: str, username: str = Depends(get_current_user)):
-    if symbol in user_portfolios[username]:
-        del user_portfolios[username][symbol]
-        save_portfolio(user_portfolios)
-        return {"message": f"{symbol} 삭제됨"}
-    else:
-        raise HTTPException(status_code=404, detail="종목이 포트폴리오에 없습니다.")
+async def delete_stock(
+    symbol: str, 
+    user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+    ):
+    
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id, Portfolio.symbol == symbol)
+    )
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="해당 종목이 없습니다.")
+    
+    await db.delete(target)
+    await db.commit()
+    return {"message": f"{symbol} 삭제 완료"}
 
 # 포트폴리오 조회
 @router.get("/portfolio")
-def get_portfolio(username: str = Depends(get_current_user)):
-    result = []
-    if not user_portfolios or not user_portfolios[username]:
-        return []
-    for symbol, amount in user_portfolios[username].items():
-        price = get_price(symbol)
-        result.append({
-            "symbol": symbol,
-            "amount": amount,
+async def get_portfolio(
+    user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+    ):
+    
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id)
+    )
+    items = result.scalars().all()
+    
+    portfolio_data = []
+    for item in items:
+        price = get_price(item.symbol)
+        portfolio_data.append({
+            "symbol": item.symbol,
+            "amount": item.amount,
             "price": price
         })
-    return result
-
+    
+    return portfolio_data
 
 
 # 총 평가금액 조회
 @router.get("/portfolio/value")
-def get_total_value(username: str = Depends(get_current_user)):
+async def get_total_value(
+    user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+    ):
+    
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id)
+    )
+    items = result.scalars().all()
+
     total = 0
     details = []
 
-    for symbol, amount in user_portfolios[username].items():
-        price = get_price(symbol)
-        total += price * amount
+    for item in items:
+        price = get_price(item.symbol)
+        value = price * item.amount
+        total += value
         details.append({
-            "symbol": symbol,
+            "symbol": item.symbol,
             "price": price,
-            "amount": amount,
-            "value": price * amount
+            "amount": item.amount,
+            "value": value
         })
     
     return {

@@ -1,11 +1,14 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from dotenv import load_dotenv
+import asyncio
 
 # .env 파일 로드 (가장 위에서)
 load_dotenv()
 
 from app.auth import router as auth_router
 from app.portfolio import router as portfolio_router
+from app.database import init_db
 
 # 실행 코드
 # 기본
@@ -15,7 +18,12 @@ from app.portfolio import router as portfolio_router
 # 서버
 # uvicorn app.main:app --reload
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
 app.include_router(portfolio_router)
