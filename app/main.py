@@ -1,0 +1,25 @@
+from fastapi import FastAPI
+from dotenv import load_dotenv
+
+# .env 파일 로드 (가장 위에서)
+load_dotenv()
+
+from app.auth import router as auth_router
+from app.portfolio import router as portfolio_router
+
+# 실행 코드
+# 기본
+# python -m venv .venv
+# .\.venv\Scripts\activate
+# pip install -r requirements.txt
+# 서버
+# uvicorn app.main:app --reload
+
+app = FastAPI()
+
+app.include_router(auth_router)
+app.include_router(portfolio_router)
+
+@app.get("/")
+def read_root():
+    return {"message": "주식 분석 API 서버에 오신 것을 환영합니다"}
