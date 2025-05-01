@@ -1,5 +1,6 @@
 import requests, json, os
 from bs4 import BeautifulSoup
+import pandas as pd
 
 # 실시간 주가 크롤링 함수
 def get_price(symbol: str):
@@ -15,3 +16,16 @@ def get_price(symbol: str):
         except ValueError:
             return 0
     return 0
+
+def compute_rsi(series: pd.Series, period: int = 14):
+    delta =series.diff()
+    gain = delta.clip(lower=0)
+    loss = delta.clip(upper=0)
+    
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+    
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    
+    return rsi

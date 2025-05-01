@@ -9,6 +9,7 @@ load_dotenv()
 from app.auth import router as auth_router
 from app.portfolio import router as portfolio_router
 from app.collect import router as collect_router
+from app.recommend import router as recommend_router
 from app.database import init_db
 
 # 실행 코드
@@ -29,6 +30,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(portfolio_router)
 app.include_router(collect_router)
+app.include_router(recommend_router)
 
 @app.get("/")
 def read_root():
