@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship, DeclarativeBase
-
-class Base(DeclarativeBase):
-    pass
+from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -23,3 +21,15 @@ class Portfolio(Base):
     
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="portfolios")
+
+class StockData(Base):
+    __tablename__ = "stock_data"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, index=True)
+    date = Column(Date, index=True)
+    open = Column(Float)
+    high = Column(Float)
+    low = Column(Float)
+    close = Column(Float)
+    volume = Column(Integer)

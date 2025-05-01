@@ -6,13 +6,9 @@ from pydantic import BaseModel
 from app.auth import get_current_user
 from app.models import Portfolio
 from app.utils import get_price
-from app.database import async_session_maker
+from app.database import async_session_maker, get_db
 
 router = APIRouter()
-
-async def get_db():
-    async with async_session_maker() as session:
-        yield session
 
 class StockItem(BaseModel):
     symbol: str

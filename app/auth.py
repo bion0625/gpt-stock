@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from app.models import User
-from app.database import async_session_maker
+from app.database import async_session_maker, get_db
 import os
 
 router = APIRouter()
@@ -16,10 +16,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
-
-async def get_db():
-    async with async_session_maker() as session:
-        yield session
 
 from pydantic import BaseModel
 

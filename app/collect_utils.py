@@ -1,0 +1,31 @@
+import yfinance as yf
+import pandas as pd
+
+def fetch_stock_data(symbol: str, period: str = "1mo", interval: str = "1d"):
+    """
+    지정한 종목(symbol)의 최근 주가 데이터를 수집한다.
+
+    Args:
+        symbol (str): 주식 코드 (예: AAPL, MSFT, 005930.KQ)
+        period (str): 기간 (예: "1mo", "3mo", "1y")
+        interval (str): 간격 (예: "1d", "1wk", "1mo")
+    
+    Returns:
+        pd.DataFrame: 종가, 시가, 고가, 저가, 거래량 포함 데이터프레임
+    """
+    ticker = yf.Ticker(symbol)
+    df = ticker.history(period=period, interval=interval)
+    
+    if df.empty:
+        raise ValueError(f"No data found for symbol: {symbol}")
+    
+    df.reset_index(inplace=True)
+    df = df[["Date", "Open", "High", "Low", "Close", "Volume"]]
+    df.columns = [["date", "open", "high", "low", "close", "volume"]]
+    
+    return df
+
+# 테스트 코드
+if __name__== "__main__":
+    df = fetch_stock_data("AAPL", period="1mo")
+    print(df.head())
