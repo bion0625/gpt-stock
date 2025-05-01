@@ -20,7 +20,7 @@ def get_price(symbol: str):
 def compute_rsi(series: pd.Series, period: int = 14):
     delta =series.diff()
     gain = delta.clip(lower=0)
-    loss = delta.clip(upper=0)
+    loss = -delta.clip(upper=0)
     
     avg_gain = gain.rolling(window=period).mean()
     avg_loss = loss.rolling(window=period).mean()
