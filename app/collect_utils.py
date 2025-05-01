@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 
-def fetch_stock_data(symbol: str, period: str = "1mo", interval: str = "1d"):
+def fetch_stock_data(symbol: str, period: str = "1y", interval: str = "1d"):
     """
     지정한 종목(symbol)의 최근 주가 데이터를 수집한다.
 
