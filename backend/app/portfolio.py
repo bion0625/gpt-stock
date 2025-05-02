@@ -78,6 +78,24 @@ async def get_portfolio(
     
     return portfolio_data
 
+@router.get("/portfolio/{symbol}")
+async def get_stock_detail(
+    symbol: str, 
+    user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+    ):
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id, Portfolio.symbol == symbol)
+    )
+    portfolio_item = result.scalar_one_or_none()
+    if not portfolio_item:
+        raise HTTPException(status_code=404, detail="해당 종목이 없습니다.")
+    
+    return {
+        "symbol": portfolio_item.symbol,
+        "amount": portfolio_item.amount,
+    }
+
 
 # 총 평가금액 조회
 @router.get("/portfolio/value")
