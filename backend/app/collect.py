@@ -7,6 +7,7 @@ from app.database import get_db
 from app.collect_utils import fetch_stock_data
 from app.services import save_stock_data
 from app.models import StockData
+import app.services as services, app.schemas as schemas
 
 router = APIRouter()
 
@@ -16,6 +17,20 @@ SYMBOL_LIST = {
     "005930.KQ" # 삼성전자
     # 필요시 더 추가
 }
+
+@router.get("/stocks/list", response_model=list[schemas.StockBase])
+async def list_stocks(db: AsyncSession = Depends(get_db)):
+    results = await services.get_all_stocks(db)
+    if not results:
+        raise HTTPException(status_code=404, detail="No Stocks found.")
+    return results
+
+@router.get("/stocks/search", response_model=list[schemas.StockBase])
+async def search_stocks(q: str, db: AsyncSession = Depends(get_db)):
+    results = await services.search_stocks(db, q)
+    if not results:
+        raise HTTPException(status_code=404, detail="No Stocks found.")
+    return results
 
 @router.post("/collect/all")
 async def collect_all_stocks(db: AsyncSession = Depends(get_db)):

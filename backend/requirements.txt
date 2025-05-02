@@ -11,3 +11,4 @@ sqlalchemy>=2.0
 aiosqlite
 yfinance
 pandas
+pykrx

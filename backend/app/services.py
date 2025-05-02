@@ -1,8 +1,51 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models import StockData
+from sqlalchemy import select, bindparam
+from app.models import StockData, Stock
+from app.database import async_session_maker
 from typing import List
+from pykrx import stock
 import pandas as pd
+
+async def get_all_stocks(db: AsyncSession):
+    result = await db.execute(select(Stock))
+    records = result.scalars().all()
+    return records
+
+async def search_stocks(db: AsyncSession, query: str):
+    stmt = select(Stock).where(
+        Stock.name.ilike(bindparam("query")) | Stock.symbol.ilike(bindparam("query")))
+    result = await db.execute(stmt.params(query=f"%{query}%"))
+    records = result.scalars().all()
+    return records
+
+async def load_krx_stocks():
+    markets = ["KOSPI", "KOSDAQ", "ETF"]
+    async with async_session_maker() as session:
+        for market in markets:
+            tickers = stock.get_market_ticker_list(market=market)
+            for symbol in tickers:
+                name = stock.get_market_ticker_name(symbol)
+                result = await session.execute(
+                    select(Stock).where(Stock.symbol == symbol)
+                )
+                existing = result.scalar_one_or_none()
+                if existing:
+                    continue
+                
+                stock_record = Stock(
+                    name=name,
+                    symbol=symbol,
+                    market=market
+                )
+                
+                session.add(stock_record)
+            await session.commit()
+        print("✅ 한국 KRX 종목 데이터 적제 완료!")
+        
+if __name__ == "__main__":
+    asyncio.run(load_krx_stocks())
+        
 
 async def save_stock_data(symbol: str, df: pd.DataFrame, db: AsyncSession):
     """

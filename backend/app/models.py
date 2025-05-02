@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
-from sqlalchemy.orm import relationship, DeclarativeBase
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 class User(Base):
@@ -21,6 +21,14 @@ class Portfolio(Base):
     
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="portfolios")
+
+class Stock(Base):
+    __tablename__ = "stocks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    symbol = Column(String, unique=True,  index=True)
+    market = Column(String, index=True)
 
 class StockData(Base):
     __tablename__ = "stock_data"
