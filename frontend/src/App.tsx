@@ -22,7 +22,7 @@ function App() {
         <Route path="/register" element={<RegisterPage/>} />
         <Route path="/" element={<HomePage/>} />
         <Route path="/portfolio" element={<PortfolioPage/>} />
-        <Route path="/portfolio/:symbol" element={<StockDetailPage/>} />
+        <Route path="/stocks/:symbol" element={<StockDetailPage/>} />
       </Routes>
     </Router>
   )

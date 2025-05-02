@@ -62,3 +62,26 @@ async def get_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
     ]
     
     return {"symbol":symbol, "count": len(data), "data": data}
+
+@router.get("/stocks/{symbol}")
+async def get_latest_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(StockData)
+        .where(StockData.symbol == symbol)
+        .order_by(StockData.date.desc())
+        .limit(1)
+    )
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="No data found for symbol")
+    
+    return {
+        "symbol": record.symbol,
+        "date": record.date.isoformat(),
+        "open": record.open,
+        "high": record.high,
+        "low": record.low,
+        "close": record.close,
+        "volume": record.volume
+    }

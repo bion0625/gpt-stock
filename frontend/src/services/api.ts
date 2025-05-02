@@ -31,11 +31,21 @@ export const fetchPortfolio = async () => {
 };
 
 export const fetchStockDetail = async (symbol: string) => {
-    const res = await api.get(`portfolio/${symbol}`);
+    const res = await api.get(`stocks/${symbol}`);
     return res.data;
-}
+};
+
+export const fetchStockHistory = async (symbol: string) => {
+    const res = await api.get(`stocks/${symbol}/data`);
+    return res.data;
+};
+
+export const fetchStockRecommendation = async (symbol: string) => {
+    const res = await api.get(`recommend/${symbol}`);
+    return res.data;
+};
 
 export const deleteStock = async (symbol: string) => {
     const res = await api.delete(`/portfolio/${symbol}`);
     return res.data;
-}
+};
