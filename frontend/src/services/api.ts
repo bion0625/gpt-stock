@@ -35,8 +35,8 @@ export const fetchStockDetail = async (symbol: string) => {
     return res.data;
 };
 
-export const fetchStockHistory = async (symbol: string) => {
-    const res = await api.get(`stocks/${symbol}/data`);
+export const fetchStockHistory = async (symbol: string, period: string) => {
+    const res = await api.get(`stocks/${symbol}/data?period=${period}`);
     return res.data;
 };
 

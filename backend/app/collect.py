@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
@@ -39,7 +41,11 @@ async def collect_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/stocks/{symbol}/data")
-async def get_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
+async def get_stock_data(
+    symbol: str,
+    period: Optional[str] = Query("7d", description="기간 선택: 7d, 1mo, 1y"),
+    db: AsyncSession = Depends(get_db)
+    ):
     result = await db.execute(
         select(StockData).where(StockData.symbol == symbol)
     )
@@ -47,6 +53,18 @@ async def get_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
     
     if not records:
         raise HTTPException(status_code=404, detail="No data found for symbol")
+    
+    now = datetime.utcnow().date()
+    if period == "7d":
+        cutoff = now - timedelta(days=7)
+    elif period == "1mo":
+        cutoff = now - timedelta(days=30)
+    elif period == "1y":
+        cutoff = now - timedelta(days=365)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid period parameter")
+    
+    records =[r for r in records if r.date >= cutoff]
     
     # DB 객체 -> 딕셔너리로 변환
     data = [
