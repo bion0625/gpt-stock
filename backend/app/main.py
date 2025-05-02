@@ -28,10 +28,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-origins = {
+origins = [
     "http://localhost:5173",
     "http://lietzsche.iptime.org:5173/"
-}
+]
 
 app.add_middleware(
     CORSMiddleware,
