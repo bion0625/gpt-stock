@@ -32,7 +32,7 @@ async def search_stocks(q: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No Stocks found.")
     return results
 
-@router.post("/collect/all")
+@router.post("/collect/sample/all")
 async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
     results = []
     
@@ -45,6 +45,14 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
             results.append({"symbol": symbol, "status": "error", "error": str(e)})
     
     return {"results": results}
+
+@router.post("/collect/krx/all")
+async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
+    await services.load_krx_stocks()
+    results = await services.get_all_stocks(db)
+    if not results:
+        raise HTTPException(status_code=404, detail="No Stocks found.")
+    return results
 
 @router.post("/collect/{symbol}")
 async def collect_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
