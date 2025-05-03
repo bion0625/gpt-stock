@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage"
 import StockDetailPage from "./pages/StockDetailPage"
 import StocksPage from "./pages/StocksPage"
 import StocksSearchPage from "./pages/StocksSearchPage"
+import { ToastContainer } from "react-toastify"
 
 function App() {
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/search" element={<StocksSearchPage/>} />
         <Route path="/stocks/:symbol" element={<StockDetailPage/>} />
       </Routes>
+      <ToastContainer/>
     </Router>
   )
 }
