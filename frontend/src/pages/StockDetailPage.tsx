@@ -28,7 +28,7 @@ const StockDetailPage = () => {
     }, [symbol, period]);
 
     return (
-        <div className="min-h-screen bg-green-100 p-4">
+        <div className="bg-green-100 px-4">
             <h1 className="text-3xl text-center mt-8">{symbol} 상세</h1>
 
             <div className="mt-4">

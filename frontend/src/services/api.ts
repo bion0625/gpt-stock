@@ -15,6 +15,16 @@ api.interceptors.request.use(config => {
 
 export default api;
 
+export const getStocks = async () => {
+    const res = await api.get('/stocks/list');
+    return res.data;
+}
+
+export const searchStocks = async (query: string) => {
+    const res = await api.get(`/stocks/search?q=${query}`);
+    return res.data
+}
+
 export const addStock = async (stock: {symbol: string; amount: number}) => {
     const res = await api.post('/portfolio', stock);
     return res.data;

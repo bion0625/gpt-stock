@@ -46,7 +46,7 @@ const PortfolioPage = () => {
     }, [])
 
     return (
-        <div className="min-h-screen bg-green-100 p-4">
+        <div className="bg-green-100 px-4">
             <h1 className="text-3xl text-center mt-4">My Portfolio</h1>
             <AddStockForm onAdd={handleAdd}/>
             {loading ? (

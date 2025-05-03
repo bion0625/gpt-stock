@@ -18,7 +18,7 @@ const RegisterPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex items-center justify-center">
             <form className="bg-white p-8 rounded shadow-md w-96" onSubmit={handleRegister}>
                 <h2 className="text-2xl font-bold mb-4 text-center"></h2>
                 {message && <p className="text-sm mb-2">{message}</p>}
