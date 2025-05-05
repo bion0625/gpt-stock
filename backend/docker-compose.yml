@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  redis: # container name
+    image: redis:6.2.6-alpine
+    ports: # 바인딩할 포트:내부 포트
+      - 6379:6379

@@ -12,3 +12,5 @@ aiosqlite
 yfinance
 pandas
 pykrx
+celery[redis]
+celery[beat]

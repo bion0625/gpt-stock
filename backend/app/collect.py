@@ -3,12 +3,13 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+import asyncio
 
 from app.auth import get_current_user
 from app.database import get_db
 from app.collect_utils import fetch_stock_data
 from app.services import save_stock_data
-from app.models import StockData
+from app.models import StockData, Stock
 from app.utils import get_price, check_korea_market_open
 import app.services as services, app.schemas as schemas
 
@@ -39,7 +40,7 @@ async def search_stocks(q: str, db: AsyncSession = Depends(get_db), user = Depen
 
 
 @router.post("/collect/sample/all")
-async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
+async def collect_sample_all_stocks(db: AsyncSession = Depends(get_db)):
     results = []
     
     for symbol in SYMBOL_LIST:
@@ -59,6 +60,25 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
     if not results:
         raise HTTPException(status_code=404, detail="No Stocks found.")
     return results
+
+@router.post("/collect/all")
+async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
+    results = []
+    
+    result = await db.execute(select(Stock))
+    stocks = result.scalars().all()
+    
+    for stock in stocks:
+        try:
+            df = fetch_stock_data(stock.symbol)
+            await save_stock_data(stock.symbol, df, db)
+            results.append({"symbol": stock.symbol, "status": "success", "count": len(df)})
+        except Exception as e:
+            results.append({"symbol": stock.symbol, "status": "error", "error": str(e)})
+        
+        asyncio.sleep(2)
+    
+    return {"results": results}
 
 @router.post("/collect/{symbol}")
 async def collect_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):
