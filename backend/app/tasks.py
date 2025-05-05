@@ -8,7 +8,7 @@ import requests
 # .\.venv\Scripts\activate
 # 창 두개 아래 각각각
 # celery -A app.celery_worker.celery_app worker --loglevel=info --pool=solo
-# Celery -A app.celery_worker.celery_app beat --loglevel=info
+# celery -A app.celery_worker.celery_app beat --loglevel=info
 
 async def update_all_stocks():
     print("⏰ stating stock date update...")
