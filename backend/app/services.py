@@ -1,7 +1,7 @@
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, bindparam
-from app.models import StockData, Stock
+from app.models import StockData, Stock, Portfolio
 from app.database import async_session_maker
 from typing import List
 from pykrx import stock
@@ -18,6 +18,35 @@ async def search_stocks(db: AsyncSession, query: str):
     result = await db.execute(stmt.params(query=f"%{query}%"))
     records = result.scalars().all()
     return records
+
+async def make_stock_list_with_portfolio(stocks, db: AsyncSession, user):
+    
+    items = await db.execute(
+        select(Portfolio).where(Portfolio.user_id == user.id)
+    )
+    
+    portfolio_items = items.scalars().all()
+    
+    portfolio_symbols = {item.symbol for item in portfolio_items}
+    
+    stock_list = []
+    for stock in stocks:
+        symbolWithMarket = get_symbol_with_market(stock.symbol, stock.market)
+        stock_list.append({
+            'symbol': symbolWithMarket,
+            'name': stock.name,
+            'market': stock.market,
+            "is_in_portfolio": symbolWithMarket in portfolio_symbols
+        })
+    
+    return stock_list
+
+def get_symbol_with_market(symbol, market):
+    market_map = {
+        'KOSPI': 'KS',
+        'KOSDAQ': 'KQ'
+    }
+    return f"{symbol}.{market_map[market]}"
 
 async def load_krx_stocks():
     markets = ["KOSPI", "KOSDAQ", "ETF"]

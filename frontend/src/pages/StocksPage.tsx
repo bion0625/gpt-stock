@@ -6,6 +6,7 @@ interface Stock {
     symbol: string;
     name: string;
     market: string;
+    is_in_portfolio: boolean
 }
 
 const StocksPage = () => {
@@ -20,7 +21,7 @@ const StocksPage = () => {
             <h1 className="text-2xl font-bold mb-4">종목 리스트</h1>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {stocks.map(stock => 
-                    <SimpleStockCard key={stock.symbol} symbol={stock.symbol} name={stock.name} market={stock.market}/>
+                    <SimpleStockCard key={stock.symbol} symbol={stock.symbol} name={stock.name} market={stock.market} is_in_portfolio={stock.is_in_portfolio}/>
                 )}
             </div>
         </div>

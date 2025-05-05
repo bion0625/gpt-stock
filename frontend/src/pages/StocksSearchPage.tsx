@@ -7,6 +7,7 @@ interface Stock {
     symbol: string;
     name: string;
     market: string;
+    is_in_portfolio: boolean;
 }
 
 const StocksSearchPage = () => {
@@ -28,7 +29,7 @@ const StocksSearchPage = () => {
             <SearchBar value={query} onChange={setQuery} onSearch={handleSearch}/>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {results.map(stock => 
-                    <SimpleStockCard key={stock.symbol} symbol={stock.symbol} name={stock.name} market={stock.market} />
+                    <SimpleStockCard key={stock.symbol} symbol={stock.symbol} name={stock.name} market={stock.market} is_in_portfolio={stock.is_in_portfolio}/>
                 )}
             </div>
         </div>

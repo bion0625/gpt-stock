@@ -3,6 +3,8 @@ from typing import Optional
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+from app.auth import get_current_user
 from app.database import get_db
 from app.collect_utils import fetch_stock_data
 from app.services import save_stock_data
@@ -19,18 +21,21 @@ SYMBOL_LIST = {
 }
 
 @router.get("/stocks/list", response_model=list[schemas.StockBase])
-async def list_stocks(db: AsyncSession = Depends(get_db)):
-    results = await services.get_all_stocks(db)
-    if not results:
+async def list_stocks(db: AsyncSession = Depends(get_db), user = Depends(get_current_user)):
+    stocks = await services.get_all_stocks(db)
+    if not stocks:
         raise HTTPException(status_code=404, detail="No Stocks found.")
-    return results
+    
+    return await services.make_stock_list_with_portfolio(stocks, db, user)
 
 @router.get("/stocks/search", response_model=list[schemas.StockBase])
-async def search_stocks(q: str, db: AsyncSession = Depends(get_db)):
-    results = await services.search_stocks(db, q)
-    if not results:
+async def search_stocks(q: str, db: AsyncSession = Depends(get_db), user = Depends(get_current_user)):
+    stocks = await services.search_stocks(db, q)
+    if not stocks:
         raise HTTPException(status_code=404, detail="No Stocks found.")
-    return results
+    
+    return await services.make_stock_list_with_portfolio(stocks, db, user)
+
 
 @router.post("/collect/sample/all")
 async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
