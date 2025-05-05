@@ -34,10 +34,10 @@ const StockDetailPage = () => {
             <div className="mt-4">
                 <h2 className="text-xl">현재 정보</h2>
                 <p>날짜: {detail?.date}</p>
-                <p>종가: {detail?.close}</p>
-                <p>고가: {detail?.high}</p>
+                <p>현재가: {detail?.close}</p>
+                {/* <p>고가: {detail?.high}</p>
                 <p>저가: {detail?.low}</p>
-                <p>거래량: {detail?.volume}</p>
+                <p>거래량: {detail?.volume}</p> */}
             </div>
 
             <div className="flex space-x-2">
