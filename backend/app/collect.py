@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -9,6 +9,7 @@ from app.database import get_db
 from app.collect_utils import fetch_stock_data
 from app.services import save_stock_data
 from app.models import StockData
+from app.utils import get_price, check_korea_market_open
 import app.services as services, app.schemas as schemas
 
 router = APIRouter()
@@ -75,14 +76,14 @@ async def get_stock_data(
     db: AsyncSession = Depends(get_db)
     ):
     result = await db.execute(
-        select(StockData).where(StockData.symbol == symbol)
+        select(StockData).where(StockData.symbol == symbol).order_by(StockData.date.asc())
     )
     records = result.scalars().all()
     
     if not records:
         raise HTTPException(status_code=404, detail="No data found for symbol")
     
-    now = datetime.utcnow().date()
+    now = datetime.now(timezone.utc).date()
     if period == "7d":
         cutoff = now - timedelta(days=7)
     elif period == "1mo":
@@ -92,7 +93,7 @@ async def get_stock_data(
     else:
         raise HTTPException(status_code=400, detail="Invalid period parameter")
     
-    records =[r for r in records if r.date >= cutoff]
+    filtered =[r for r in records if r.date >= cutoff]
     
     # DB 객체 -> 딕셔너리로 변환
     data = [
@@ -104,7 +105,7 @@ async def get_stock_data(
             "close": record.close,
             "volume": record.volume,
         }
-        for record in records
+        for record in filtered
     ]
     
     return {"symbol":symbol, "count": len(data), "data": data}
@@ -118,9 +119,20 @@ async def get_latest_stock_data(symbol: str, db: AsyncSession = Depends(get_db))
         .limit(1)
     )
     record = result.scalar_one_or_none()
-
+    
     if not record:
-        raise HTTPException(status_code=404, detail="No data found for symbol")
+        df = fetch_stock_data(symbol, period="1y")
+        await save_stock_data(symbol, df, db)
+        result = await db.execute(
+            select(StockData).where(StockData.symbol == symbol).order_by(StockData.date.desc()).limit(1)
+        )
+        record = result.scalar_one_or_none()
+        if not record:
+            raise HTTPException(status_code=404, detail="No data found for symbol")
+        
+    if check_korea_market_open():
+        # 장 중이면 naver에서 가져온 가격을 종가에 적용(최신 가격)
+        record.close = get_price(symbol.split('.')[0]) # todo 장 열리고 테스트 필요
     
     return {
         "symbol": record.symbol,
