@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const api = axios.create({
     baseURL: "http://localhost:8000", // fastAPI 서버 주소
@@ -12,6 +13,19 @@ api.interceptors.request.use(config => {
     }
     return config;
 });
+
+api.interceptors.response.use(
+    response => response,
+    async (error) => {
+        if (error.response && error.response.status === 401) {
+            // 토큰 만료 처리
+            localStorage.removeItem('access_token');
+            toast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+)
 
 export default api;
 

@@ -1,10 +1,15 @@
 import { useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -13,8 +18,8 @@ const LoginPage = () => {
                 username,
                 password
             }));
-            localStorage.setItem('access_token', res.data.access_token);
-            window.location.href = '/';
+            login(res.data.access_token);
+            navigate('/');
         } catch (err) {
             setError('로그인 실패: 아이디 또는 비밀번호가 틀렸습니다.');
         }
