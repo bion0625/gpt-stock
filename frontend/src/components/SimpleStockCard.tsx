@@ -50,15 +50,11 @@ const SimpleStockCard = ({symbol, name, market, is_in_portfolio} : SimpleStockCa
         }
     }
 
-    const MarketMap: Record<string, string> = {
-        KOSPI: "KS",
-        KOSDAQ: "KQ"
-    };
-
     return (
         <div className="bg-white px-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
-            onClick={() => navigate(`/stocks/${symbol}.${MarketMap[market]}`)}>
-            <h2>{name} ({symbol})</h2>
+            onClick={() => navigate(`/stocks/${symbol}`)}>
+            <h2>{name}</h2>
+            <p>{symbol}</p>
             <p>{market}</p>
             <div className="mt-2">
                 <input
