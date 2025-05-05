@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import StockCard from "../components/StockCard";
 import { addStock, deleteStock, fetchPortfolio } from "../services/api";
-import AddStockForm from "../components/AddStockForm";
 
 interface Stock {
+    name: string;
     symbol: string;
+    price: number;
     amount: number;
 }
 
@@ -48,7 +49,6 @@ const PortfolioPage = () => {
     return (
         <div className="bg-green-100 px-4">
             <h1 className="text-3xl text-center mt-4">My Portfolio</h1>
-            <AddStockForm onAdd={handleAdd}/>
             {loading ? (
                 <p className="text-center mt-4">Loading...</p>
             ) : (
@@ -58,6 +58,8 @@ const PortfolioPage = () => {
                             key={stock.symbol} 
                             symbol={stock.symbol} 
                             amount={stock.amount}
+                            name={stock.name}
+                            price={stock.price}
                             onDelete={handleDelete}
                         />
                     ))}

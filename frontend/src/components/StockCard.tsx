@@ -1,17 +1,21 @@
 import { Link, useNavigate } from "react-router-dom";
 
 interface StockCardProps {
+    name: string;
     symbol: string;
     amount: number;
+    price: number;
 }
 
-const StockCard = ({symbol,amount, onDelete}: StockCardProps & {onDelete: (symbol: string) => void}) => {
+const StockCard = ({symbol, amount, name, price, onDelete}: StockCardProps & {onDelete: (symbol: string) => void}) => {
 
     const navigate = useNavigate();
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold">{symbol}</h2>
+            <h2 className="text-xl font-semibold">{name}</h2>
+            <p className="text-lg">symbol: {symbol}</p>
+            <p className="text-lg">price: {price}</p>
             <p className="text-lg">Amount: {amount}</p>
             <div>
                 <Link to={`/stocks/${symbol}`}>

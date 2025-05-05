@@ -15,9 +15,6 @@ const SimpleStockCard = ({symbol, name, market, is_in_portfolio} : SimpleStockCa
 
     const [isInPortfolio, setIsInPortfolio] = useState(is_in_portfolio);
     const [isProcessing, setIsProcessing] = useState(false);
-
-    const [isAdding, setIsAdding] = useState(is_in_portfolio);
-    const [add, setAdd] = useState(false);
     const [amount, setAmount] = useState(0);
 
     const handleAdd = async (symbolWithMarket: string) => {

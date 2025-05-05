@@ -4,7 +4,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 
 from app.auth import get_current_user
-from app.models import Portfolio
+from app.models import Portfolio, Stock
 from app.utils import get_price
 from app.database import async_session_maker, get_db
 
@@ -69,10 +69,13 @@ async def get_portfolio(
     
     portfolio_data = []
     for item in items:
-        price = get_price(item.symbol)
+        stock_result = await db.execute(select(Stock).where(Stock.symbol == item.symbol.split('.')[0]))
+        stock = stock_result.scalar_one_or_none()
+        price = get_price(stock.symbol)
         portfolio_data.append({
             "symbol": item.symbol,
             "amount": item.amount,
+            "name": stock.name,
             "price": price
         })
     
