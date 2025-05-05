@@ -20,7 +20,7 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     'update-stocks-every-day' : {
         'task': 'app.celery_worker.update_all_stocks',
-        'schedule': crontab(hour=22, minute=25),
+        'schedule': crontab(hour=1, minute=0),
         # 'schedule': crontab(minute='*/1'), # TEST 매 1분마다 실행
     },
 }

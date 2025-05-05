@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-import time
+import asyncio
 
 from app.auth import get_current_user
 from app.database import get_db
@@ -68,16 +68,18 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Stock))
     stocks = result.scalars().all()
     
-    for stock in stocks:
+    stocks_data = [{"symbol": stock.symbol, "market": stock.market} for stock in stocks]
+    
+    for stock in stocks_data:
+        symbolWithMarket = get_symbol_with_market(stock["symbol"], stock["market"])
         try:
-            symbolWithMarket = get_symbol_with_market(stock.symbol, stock.market)
             df = fetch_stock_data(symbolWithMarket)
             await save_stock_data(symbolWithMarket, df, db)
-            results.append({"symbol": stock.symbol, "status": "success", "count": len(df)})
+            results.append({"symbol": symbolWithMarket, "status": "success", "count": len(df)})
         except Exception as e:
-            results.append({"symbol": stock.symbol, "status": "error", "error": str(e)})
+            results.append({"symbol": symbolWithMarket, "status": "error", "error": str(e)})
         
-        time.sleep(2)
+        await asyncio.sleep(2)
     
     return {"results": results}
 
