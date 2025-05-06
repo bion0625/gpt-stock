@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import StockCard from "../components/StockCard";
-import { addStock, deleteStock, fetchPortfolio } from "../services/api";
+import { deleteStock, fetchPortfolio } from "../services/api";
 
 interface Stock {
     name: string;
@@ -24,15 +24,6 @@ const PortfolioPage = () => {
         setLoading(false);
     };
 
-    const handleAdd = async (symbol: string, amount: number) => {
-        try {
-            await addStock({symbol, amount});
-            getPortfolio(); // 추가 후 갱신
-        } catch (err) {
-            console.error('Error adding stock', err);
-        }
-    };
-
     const handleDelete = async (symbol: string) => {
         try {
             await deleteStock(symbol);
@@ -48,7 +39,7 @@ const PortfolioPage = () => {
 
     return (
         <div className="bg-green-100 px-4">
-            <h1 className="text-3xl text-center mt-4">My Portfolio</h1>
+            <h1 className="text-3xl text-center">My Portfolio</h1>
             {loading ? (
                 <p className="text-center mt-4">Loading...</p>
             ) : (
