@@ -14,3 +14,4 @@ pandas
 pykrx
 celery[redis]
 celery[beat]
+pytz

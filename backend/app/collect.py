@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import asyncio
+import pytz
+from types import SimpleNamespace
 
 from app.auth import get_current_user
 from app.database import get_db
@@ -102,9 +104,24 @@ async def get_stock_data(
         select(StockData).where(StockData.symbol == symbol).order_by(StockData.date.asc())
     )
     records = result.scalars().all()
-    
+
     if not records:
         raise HTTPException(status_code=404, detail="No data found for symbol")
+    
+    if check_korea_market_open():
+        latest_price = get_price(symbol.split('.')[0])
+
+        fake_record = SimpleNamespace(
+            symbol=symbol,
+            date=datetime.now(timezone.utc).date(),
+            open=latest_price,
+            high=latest_price,
+            low=latest_price,
+            close=latest_price,
+            volume=0
+        )
+
+        records.append(fake_record)
     
     now = datetime.now(timezone.utc).date()
     if period == "7d":
@@ -156,13 +173,14 @@ async def get_latest_stock_data(symbol: str, db: AsyncSession = Depends(get_db))
     if check_korea_market_open():
         # 장 중이면 naver에서 가져온 가격을 종가에 적용(최신 가격)
         record.close = get_price(symbol.split('.')[0]) # todo 장 열리고 테스트 필요
+        record.date = datetime.now(pytz.timezone('Asia/Seoul')).date()
     
     return {
         "symbol": record.symbol,
         "date": record.date.isoformat(),
-        "open": record.open,
-        "high": record.high,
-        "low": record.low,
+        # "open": record.open,
+        # "high": record.high,
+        # "low": record.low,
         "close": record.close,
-        "volume": record.volume
+        # "volume": record.volume
     }
