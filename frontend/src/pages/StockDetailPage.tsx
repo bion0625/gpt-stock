@@ -29,10 +29,11 @@ const StockDetailPage = () => {
 
     return (
         <div className="bg-green-100 px-4">
-            <h1 className="text-3xl text-center">{symbol} 상세</h1>
+            <h1 className="text-3xl text-center">{detail?.name} 상세</h1>
 
             <div className="mt-4">
                 <h2 className="text-xl">현재 정보</h2>
+                <p>Code: {symbol}</p>
                 <p>날짜: {detail?.date}</p>
                 <p>현재가: {detail?.close}</p>
                 {/* <p>고가: {detail?.high}</p>

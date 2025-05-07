@@ -175,6 +175,10 @@ async def get_latest_stock_data(symbol: str, db: AsyncSession = Depends(get_db))
         record.close = get_price(symbol.split('.')[0]) # todo 장 열리고 테스트 필요
         record.date = datetime.now(pytz.timezone('Asia/Seoul')).date()
     
+    # 이름 호출
+    result = await db.execute(select(Stock).where(Stock.symbol == symbol.split('.')[0]).limit(1))
+    stock = result.scalar_one_or_none()
+    
     return {
         "symbol": record.symbol,
         "date": record.date.isoformat(),
@@ -183,4 +187,5 @@ async def get_latest_stock_data(symbol: str, db: AsyncSession = Depends(get_db))
         # "low": record.low,
         "close": record.close,
         # "volume": record.volume
+        "name": stock.name
     }
