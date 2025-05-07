@@ -28,9 +28,10 @@ def check_korea_market_open():
         return False
     
     market_open_time = time(0, 0) # UTC 기준: 한국 9시 = 0시
-    market_close_time = time(6, 30) # UTC 기준: 한국 3:30 = 6:30
+    # market_close_time = time(6, 30) # UTC 기준: 한국 3:30 = 6:30
     
-    return market_open_time <= now.time() <= market_close_time
+    # return market_open_time <= now.time() <= market_close_time
+    return market_open_time <= now.time() # 장 열리는 시점으로 당일 끝날 때까지 항구적으로 적용
 
 def compute_rsi(series: pd.Series, period: int = 14):
     delta =series.diff()
