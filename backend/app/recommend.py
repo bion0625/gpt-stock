@@ -4,7 +4,10 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models import StockData
 from app.utils import compute_rsi
+from app.utils import check_korea_market_open, get_price
 import pandas as pd
+from types import SimpleNamespace
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -23,7 +26,17 @@ async def recommand_stock(symbol: str, db: AsyncSession = Depends(get_db)):
         "date": r.date,
         "close": r.close
     } for r in records])
-    
+
+    if check_korea_market_open():
+        latest_price = get_price(symbol.split('.')[0])
+
+        new_row = pd.DataFrame([{
+            "date": datetime.now(timezone.utc).date(),
+            "close": latest_price
+        }])
+
+        df = pd.concat([df, new_row], ignore_index=True)
+
     df.sort_values("date", inplace=True)
     df["ma20"] = df["close"].rolling(window=20).mean()
     df["rsi14"] = compute_rsi(df["close"], 14)
