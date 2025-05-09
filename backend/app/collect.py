@@ -3,13 +3,12 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-import asyncio
 import pytz
 from types import SimpleNamespace
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.collect_utils import fetch_stock_data
+from app.collect_utils import fetch_stock_data, fetch_stock_history_data
 from app.services import save_stock_data, get_symbol_with_market
 from app.models import StockData, Stock
 from app.utils import get_price, check_korea_market_open
@@ -67,23 +66,29 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
 async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
     results = []
     
-    result = await db.execute(select(Stock))
+    # 운영에서는 limit 지워야 함
+    result = await db.execute(select(Stock).limit(1))
     stocks = result.scalars().all()
     
     stocks_data = [{"symbol": stock.symbol, "market": stock.market} for stock in stocks]
-    
-    for stock in stocks_data:
-        symbolWithMarket = get_symbol_with_market(stock["symbol"], stock["market"])
-        try:
-            df = fetch_stock_data(symbolWithMarket)
-            await save_stock_data(symbolWithMarket, df, db)
-            results.append({"symbol": symbolWithMarket, "status": "success", "count": len(df)})
-        except Exception as e:
-            results.append({"symbol": symbolWithMarket, "status": "error", "error": str(e)})
-        
-        await asyncio.sleep(2)
-    
-    return {"results": results}
+
+    symbols_with_market = [
+        get_symbol_with_market(stock["symbol"], stock["market"]) for stock in stocks_data
+    ]
+
+    try:
+        df = fetch_stock_history_data(symbols_with_market)
+
+        for symbol in symbols_with_market:
+            if symbol in df.columns.get_level_values(0):
+                df_symbol = df[symbol]
+                await save_stock_data(symbol, df_symbol, db)
+                results.append({"symbol": symbol, "status": "success", "count": len(df)})
+            else:
+                results.append({"symbol": symbol, "status": "error", "error": str(e)})
+    except Exception as e:
+        for symbol in symbols_with_market:
+            results.append({"symbol": symbol, "status": "error", "error": str(e)})
 
 @router.post("/collect/{symbol}")
 async def collect_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):

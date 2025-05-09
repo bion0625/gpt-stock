@@ -25,6 +25,34 @@ def fetch_stock_data(symbol: str, period: str = "1y", interval: str = "1d"):
     
     return df
 
+def fetch_stock_history_data(symbols: list[str], period: str = "1y", interval: str = "1d") -> pd.DataFrame:
+    """
+    여러 종목(symbols)의 최근 주가 데이터를 한 번에 수집한다.
+
+    Args:
+        symbols (list[str]): 주식 코드 리스트 (예: ["AAPL", "MSFT", "005930.KQ"])
+        period (str): 기간 (예: "1mo", "3mo", "1y")
+        interval (str): 간격 (예: "1d", "1wk", "1mo")
+    
+    Returns:
+        pd.DataFrame: 종목별 멀티컬럼 데이터프레임임
+    """
+
+    df = yf.download(
+        tickers=symbols,
+        period=period,
+        interval=interval,
+        group_by='ticker',
+        auto_adjust=True,
+        threads=True,
+        progress=False
+    )
+
+    if df.empty:
+        raise ValueError(f"No data found for symbols: {symbols}")
+    
+    return df
+
 # 테스트 코드
 if __name__== "__main__":
     df = fetch_stock_data("AAPL", period="1mo")
