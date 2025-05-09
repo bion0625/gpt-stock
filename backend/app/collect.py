@@ -66,8 +66,7 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
 async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
     results = []
     
-    # 운영에서는 limit 지워야 함
-    result = await db.execute(select(Stock).limit(1))
+    result = await db.execute(select(Stock))
     stocks = result.scalars().all()
     
     stocks_data = [{"symbol": stock.symbol, "market": stock.market} for stock in stocks]
@@ -78,17 +77,18 @@ async def collect_all_stocks(db: AsyncSession = Depends(get_db)):
 
     try:
         df = fetch_stock_history_data(symbols_with_market)
-
         for symbol in symbols_with_market:
-            if symbol in df.columns.get_level_values(0):
+            if symbol in df:
                 df_symbol = df[symbol]
                 await save_stock_data(symbol, df_symbol, db)
-                results.append({"symbol": symbol, "status": "success", "count": len(df)})
+                results.append({"symbol": symbol, "status": "success", "count": len(df_symbol)})
             else:
                 results.append({"symbol": symbol, "status": "error", "error": str(e)})
     except Exception as e:
         for symbol in symbols_with_market:
             results.append({"symbol": symbol, "status": "error", "error": str(e)})
+    
+    return {"results": results}
 
 @router.post("/collect/{symbol}")
 async def collect_stock_data(symbol: str, db: AsyncSession = Depends(get_db)):

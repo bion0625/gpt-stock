@@ -51,7 +51,25 @@ def fetch_stock_history_data(symbols: list[str], period: str = "1y", interval: s
     if df.empty:
         raise ValueError(f"No data found for symbols: {symbols}")
     
-    return df
+    result = {}
+
+    if isinstance(df.columns, pd.MultiIndex):
+        # 멀티심볼: 각 심볼별로 분리
+        for symbol in symbols:
+            if (symbol, 'Open') in df.columns:
+                df_symbol = df[symbol].copy()
+                df_symbol.reset_index(inplace=True)
+                df_symbol = df_symbol[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+                df_symbol.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+                result[symbol] = df_symbol
+    else:
+        # 단일 심볼: 통째로 처리
+        df.reset_index(inplace=True)
+        df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        df.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+        result[symbols[0]] = df
+    
+    return result
 
 # 테스트 코드
 if __name__== "__main__":
